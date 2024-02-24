@@ -21,7 +21,7 @@ export default function ContextCard({ context }: ContextCardProps) {
   return (
     <Card
       key={context.id}
-      sx={{ margin: "1rem", padding: "1rem" }}
+      sx={{ padding: 1, margin: 1 }}
       variant="outlined"
     >
       <Typography variant="h5">{context.name}</Typography>
