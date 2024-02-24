@@ -1,0 +1,10 @@
+services:
+  app:
+    build: .
+    image: andrehsvictor/educapi-manager-react
+    ports:
+      - 5173:5173
+    env_file:
+      - .env
+    container_name: educapi-manager-react
+    restart: always
