@@ -5,14 +5,26 @@ export type Page = {
 };
 
 export type Context = {
-    id: number;
-    name: string;
-    creator: {
-        id: number;
-        name: string;
-        email: string;
-    };
-    imageUrl: string;
-    soundUrl: string;
-    videoUrl: string;
-}
+  id: number;
+  name: string;
+  creator: Creator;
+  imageUrl: string;
+  soundUrl: string;
+  videoUrl: string;
+  challenges: Challenge[];
+};
+
+export type Creator = {
+  id: number;
+  name: string;
+  email: string;
+};
+
+export type Challenge = {
+  id: number;
+  word: string;
+  creator: Creator;
+  imageUrl: string;
+  soundUrl: string;
+  videoUrl: string;
+};
