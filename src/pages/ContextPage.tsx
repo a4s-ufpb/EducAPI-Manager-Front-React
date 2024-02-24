@@ -1,42 +1,36 @@
-import { Card, Container, Icon, Typography } from "@mui/material";
+import { Container, Typography } from "@mui/material";
 import { API_URL, Context, Page } from "../Utils";
 import { useEffect, useState } from "react";
+import ContextCard from "../components/ContextCard";
 
 export default function ContextPage() {
+  const [actualPage, setActualPage] = useState(1);
   const [contexts, setContexts] = useState<Context[]>([]);
+
   const fetchContexts = async () => {
-    const request = await fetch(`${API_URL}/v1/api/contexts`);
+    const request = await fetch(
+      `${API_URL}/v1/api/contexts?page=${actualPage - 1}`
+    );
     const response = (await request.json()) as Page;
     setContexts(response.content as Context[]);
   };
+
   useEffect(() => {
     fetchContexts();
   }, []);
+
   return (
-    <Container
-      maxWidth="md"
-      sx={{
-        border: "1px solid lightgray",
-        borderRadius: "5px",
-        padding: "10px",
-      }}
-    >
+    <Container maxWidth="md">
+      <Typography variant="h5" align="center" gutterBottom>
+        Contexts
+      </Typography>
       {contexts.length === 0 && (
-        <Typography variant="h5" align="center">
+        <Typography variant="h5" align="center" color="error">
           No contexts found
         </Typography>
       )}
       {contexts.map((context) => (
-        <Card
-          key={context.id}
-          sx={{ margin: "1rem", padding: "1rem" }}
-          variant="outlined"
-        >
-          <Typography variant="h5">{context.name}</Typography>
-          <Typography variant="body1">
-            Created by: {context.creator.name}
-          </Typography>
-        </Card>
+        <ContextCard key={context.id} context={context} />
       ))}
     </Container>
   );
