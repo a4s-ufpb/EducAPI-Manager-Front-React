@@ -10,14 +10,7 @@ export default function IndexPage() {
     navigate("/challenges");
   };
   return (
-    <Container
-      maxWidth="md"
-      sx={{
-        border: "1px solid lightgray",
-        borderRadius: "5px",
-        padding: "10px",
-      }}
-    >
+    <Container maxWidth="md">
       <Typography variant="h5" align="center" gutterBottom>
         Welcome to EducAPI Manager
       </Typography>
