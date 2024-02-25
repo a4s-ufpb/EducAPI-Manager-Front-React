@@ -13,7 +13,7 @@ npm install
 You will also need to create a `.env` file in the root of the project with the following content:
 
 ```env
-REACT_APP_API_URL=http://localhost:8080
+VITE_API_URL=http://localhost:8080
 ```
 
 After that, you can start the application with:
