@@ -1,0 +1,74 @@
+/* Button.css */
+
+/* Estilos Base do Botão */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--esp-xs); /* Espaço entre ícone e texto */
+  
+  padding: var(--esp-sm) var(--esp-lg);
+  font-size: var(--font-md);
+  font-weight: var(--peso-semi);
+  font-family: var(--fonte-primaria);
+  
+  border-radius: var(--radius-md);
+  transition: all var(--tr-fast);
+  width: fit-content;
+  white-space: nowrap;
+  user-select: none;
+}
+
+/* Variante: Primary (Cor solicitada: #13A8AE) */
+.btn--primary {
+  background-color: var(--color-accent); /* #13A8AE conforme seu :root */
+  color: var(--white);
+}
+
+.btn--primary:hover:not(:disabled) {
+  background-color: var(--color-accent-hover);
+  transform: translateY(-1px); /* Leve efeito de elevação */
+  box-shadow: 0 4px 12px rgba(19, 168, 174, 0.2);
+}
+
+/* Variante: Secondary (Exemplo utilizando a cor primária mais escura) */
+.btn--secondary {
+  background-color: transparent;
+  color: var(--color-primary);
+  border: 2px solid var(--color-primary);
+}
+
+.btn--secondary:hover:not(:disabled) {
+  background-color: var(--color-primary);
+  color: var(--white);
+}
+
+/* Variante: Danger (Utilizando o Crimson) */
+.btn--danger {
+  background-color: var(--crimson);
+  color: var(--white);
+}
+
+.btn--danger:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+/* Estado: Desabilitado */
+.btn:disabled {
+  background-color: var(--not-selected-item);
+  color: var(--slogan-app-color);
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Estilo para o Ícone */
+.bnt__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2em; /* Ícone levemente maior que o texto */
+}
+
+.btn__text {
+  line-height: var(--line-sm);
+}
