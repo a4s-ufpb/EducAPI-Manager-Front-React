@@ -21,7 +21,7 @@
 
 /* Variante: Primary (Cor solicitada: #13A8AE) */
 .btn--primary {
-  background-color: var(--color-accent); /* #13A8AE conforme seu :root */
+  background-color: var(--color-accent); 
   color: var(--white);
 }
 

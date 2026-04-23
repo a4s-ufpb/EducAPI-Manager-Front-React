@@ -1,0 +1,111 @@
+/* ================= AUTH LAYOUT BASE ================= */
+
+.container-layout {
+  display: flex;
+  min-height: 100vh;
+  width: 100%;
+  background-color: #f4f7f6;
+}
+
+/* Lado Esquerdo (Banner) - 40% da tela */
+.side-banner {
+  flex: 2;
+  background-color: var(--launcher-background);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--esp-xxl);
+}
+
+.side-banner img {
+  width: 100%;
+  max-width: 350px;
+  height: auto;
+  object-fit: contain;
+}
+
+/* Lado Direito (Conteúdo) - 60% da tela */
+.side-content {
+  flex: 4;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: var(--esp-lg);
+}
+
+/* A CAIXA (CARD) AZULADA */
+.card-layout {
+  width: 100%;
+  max-width: 500px;
+  background-color: var(--white);
+  padding: var(--esp-xxl);
+  border-radius: var(--radius-lg);
+  
+  /* Borda e Sombra Azul */
+  border: 1px solid rgba(1, 123, 138, 0.3);
+  box-shadow: 0 10px 30px rgba(1, 123, 138, 0.15);
+  
+  display: flex;
+  flex-direction: column;
+  
+  align-items: center;
+}
+
+/* Garante que inputs e botões ocupem a largura da caixa */
+.card-layout > * {
+  width: 100%;
+}
+.card-layout h1 {
+  font-size: var(--font-xxl);
+  color: var(--color-primary);
+  text-align: center;
+  margin-bottom: var(--esp-xxs); /* Substitui o valor negativo por um respiro controlado */
+}
+
+.card-layout > p:first-of-type {
+  font-size: var(--font-sm);
+  color: var(--slogan-app-color);
+  text-align: center;
+  margin-bottom: var(--esp-lg); /* Espaço generoso antes dos inputs */
+}
+
+/* Estilização da linha separadora (HR) */
+.card-layout hr {
+  width: 100%;
+  border: 0;
+  border-top: 1px solid rgba(0, 0, 0, 0.05); /* Linha bem sutil */
+  margin: var(--esp-md) 0;
+}
+
+/* Centralização de Títulos e Textos */
+
+
+/* ================= RESPONSIVIDADE ================= */
+
+@media (max-width: 850px) {
+  .container-layout {
+    flex-direction: column;
+  }
+
+  .side-banner {
+    flex: none;
+    height: 25vh;
+    padding: var(--esp-lg);
+  }
+
+  .side-banner img {
+    max-width: 180px;
+  }
+
+  .side-content {
+    flex: 1;
+    align-items: flex-start;
+    padding-top: var(--esp-xl);
+  }
+
+  .card-layout {
+    box-shadow: none; /* Opcional: visual mais limpo no mobile */
+    border: none;
+    background-color: transparent;
+  }
+}

@@ -1,0 +1,54 @@
+.form-content {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-sm);
+}
+
+.card-layout h1 {
+  font-size: var(--font-xl);
+  color: var(--color-primary);
+  text-align: center;
+  margin-bottom: -5px;
+}
+
+.text-login {
+  font-size: var(--font-sm);
+  color: var(--slogan-app-color);
+  width: 100%;
+}
+
+.button-login {
+  align-self: center ;
+  margin-top: var(--esp-md);
+  width: auto;
+  padding: var(--esp-sm) var(--esp-xl);
+}
+
+.link-login {
+  color: var(--color-primary);
+  font-weight: var(--peso-bold);
+  transition: var(--tr-fast);
+
+}
+
+.link-login:hover {
+  color: var(--color-primary-hover);
+  text-decoration: underline;
+
+}
+
+
+/* ================= RESPONSIVIDADE ================= */
+
+@media (max-width: 850px) {
+
+
+  .form-login {
+    box-shadow: none;
+    /* No mobile, pode remover a sombra se preferir um visual flat */
+    background-color: transparent;
+    /* Opcional: remover o fundo da caixa no mobile */
+    padding: var(--esp-md) 0;
+  }
+}
