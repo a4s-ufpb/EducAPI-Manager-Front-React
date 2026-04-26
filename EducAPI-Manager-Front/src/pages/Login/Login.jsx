@@ -1,10 +1,10 @@
 import React, { useState } from 'react'
 import Input from "../../components/Input/Input"
 import Button from "../../components/Button/Button"
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import "./Login.css"
 
-import AuthLayout from '../../layouts/LayoutInitial/AuthLayout';
+import AuthLayout from '../../layouts/AuthLayout/AuthLayout';
 const Login = () => {
 
   const [form, setform] = useState({
@@ -12,8 +12,11 @@ const Login = () => {
     senha: ""
 
   });
+   const navigate = useNavigate();
 
-  const handleSubmit = () => {
+  const handleSubmit = (e) => {
+     e.preventDefault()
+     navigate("/home")
 
   }
   const handleChange = () => {
@@ -25,30 +28,35 @@ const Login = () => {
     <AuthLayout
       title="Faça Login"
       text="Acesse sua conta para continuar">
-      <form className='form-content' onSubmit={(e) => e.preventDefault()}>
-
+      <form className='form-content' onSubmit={handleSubmit}>
         <Input
-          label='Email'
-          type='email'
           id='email'
-          name='email'
+          name="email"
+          label="Email"
+          type="email"
+          placeholder="seu@email.com"
+          value={form.email}
+          onChange={handleChange}
         />
 
         <Input
-          label='Senha'
-          type='password'
           id='senha'
-          name='senha'
+          name="senha"
+          label="Senha"
+          type="password"
+          placeholder="********"
+          value={form.senha}
+          onChange={handleChange}
         />
 
-        <p className='text-login'>
+        <p className='text'>
           Esqueceu a sua senha?{" "}
-          <Link to="/redefinir-senha" className='link-login'>
+          <Link to="/redefinir-senha" className='link'>
             Clique aqui
           </Link>
         </p>
 
-        <Button className='button-login'
+        <Button className='button'
           type='submit'
           children='Entrar'
         />
@@ -57,9 +65,9 @@ const Login = () => {
       </form>
       <hr />
 
-      <p className='text-login' style={{ textAlign: "center" }}>
+      <p className='text' style={{ textAlign: "center" }}>
         Não tem uma conta?{" "}
-        <Link to="/cadastrar" className='link-login'>
+        <Link to="/cadastrar" className='link'>
           Cadastre-se
         </Link>
       </p>
