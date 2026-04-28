@@ -1,0 +1,12 @@
+.main-container {
+  display: grid;
+  grid-template-columns: 250px 1fr; /* Largura da sidebar no desktop */
+  min-height: 100vh;
+}
+
+@media (max-width: 1024px) {
+  .main-container {
+    display: block; /* No mobile, eles não ficam lado a lado */
+  }
+
+}

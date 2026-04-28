@@ -46,7 +46,7 @@ const ResetPassword = () => {
 
         <Button className='button'
           type='submit'
-          children='Cadastrar'
+          children='Redefinir senha'
         />
 
 
