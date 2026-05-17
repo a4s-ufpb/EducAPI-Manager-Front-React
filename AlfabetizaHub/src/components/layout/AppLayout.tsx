@@ -2,7 +2,7 @@ import { ReactNode } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Home, LogIn, LogOut, BookOpen } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
-
+import logo from '../../assets/logo.png';
 interface AppLayoutProps {
   children: ReactNode;
 }
@@ -22,7 +22,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
       <header className="border-b border-[#141414]/10 bg-white sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2 font-bold text-xl tracking-tight">
-            <BookOpen className="w-6 h-6 text-[#5A5A40]" />
+            <img src={logo} className="w-8 h-8 text-[#5A5A40]" />
             <span>AlfabetizaHub</span>
           </Link>
 

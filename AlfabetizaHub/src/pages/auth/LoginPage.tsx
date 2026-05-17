@@ -9,7 +9,7 @@ import GoogleButton from '../../components/shared/GoogleButton';
 import AuthDivider from '../../components/shared/AuthDivider';
 import ErrorMessage from '../../components/ui/ErrorMessage';
 import Spinner from '../../components/ui/Spinner';
-
+import logo from '../../assets/logo.png';
 export default function LoginPage() {
   const navigate = useNavigate();
   const { login, loginWithGoogle } = useAuth();
@@ -58,8 +58,8 @@ export default function LoginPage() {
       >
         {/* Logo */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-14 h-14 bg-[#5A5A40] rounded-2xl mb-4 shadow-lg shadow-[#5A5A40]/25">
-            <BookOpen className="w-7 h-7 text-white" />
+          <div className="inline-flex items-center justify-center w-14 h-14 bg-whit rounded-2xl mb-4 shadow-lg shadow-[#5A5A40]/25">
+            <img src={logo} alt='logo'></img>
           </div>
           <h1 className="text-2xl font-bold tracking-tight text-[#141414]">AlfabetizaHub</h1>
           <p className="text-sm text-[#141414]/50 font-mono uppercase tracking-widest mt-1">

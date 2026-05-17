@@ -68,7 +68,7 @@ export default function ThemesPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-[#141414]">Temas Pedagógicos</h1>
+          <h1 className="text-3xl font-bold tracking-tight text-[#141414]">Temas</h1>
           <p className="text-[#141414]/60 text-sm mt-1">
             Gerencie os temas e palavras-chave para os desafios de alfabetização.
           </p>
