@@ -19,9 +19,10 @@ export function useThemes() {
     text: string,
     imageUrl = '',
     soundUrl = '',
-    videoUrl = ''
+    videoUrl = '',
+    file?: File | null
   ): Promise<Theme> => {
-    const created = await themesApi.create(text, imageUrl, soundUrl, videoUrl);
+    const created = await themesApi.create(text, imageUrl, soundUrl, videoUrl, file);
     setThemes((prev) => [created, ...prev]);
     return created;
   };
@@ -31,9 +32,10 @@ export function useThemes() {
     text: string,
     imageUrl = '',
     soundUrl = '',
-    videoUrl = ''
+    videoUrl = '',
+    file?: File | null
   ): Promise<void> => {
-    const updated = await themesApi.update(id, text, imageUrl, soundUrl, videoUrl);
+    const updated = await themesApi.update(id, text, imageUrl, soundUrl, videoUrl, file);
     setThemes((prev) => prev.map((t) => (t.id === id ? updated : t)));
   };
 

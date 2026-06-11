@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Save } from 'lucide-react';
+import { Save, Link as LinkIcon, Upload } from 'lucide-react';
 import type { Challenge } from '../../types';
 
 interface ChallengeFormProps {
   visible: boolean;
   editing?: Challenge | null;
-  onSubmit: (text: string, imageUrl: string) => Promise<void>;
+  onSubmit: (text: string, imageUrl: string, file?: File | null) => Promise<void>;
   onCancel: () => void;
 }
 
@@ -14,6 +14,9 @@ export default function ChallengeForm({ visible, editing, onSubmit, onCancel }: 
   const [text, setText] = useState('');
   const [imageUrl, setImageUrl] = useState('');
   const [loading, setLoading] = useState(false);
+  const [imageMode, setImageMode] = useState<'url' | 'upload'>('url');
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [filePreview, setFilePreview] = useState<string>('');
 
   // Preenche os campos ao editar
   useEffect(() => {
@@ -24,16 +27,43 @@ export default function ChallengeForm({ visible, editing, onSubmit, onCancel }: 
       setText('');
       setImageUrl('');
     }
+    setImageMode('url');
+    setImageFile(null);
+    setFilePreview('');
   }, [editing]);
+
+  // Gera/limpa o preview do arquivo selecionado
+  useEffect(() => {
+    if (!imageFile) {
+      setFilePreview('');
+      return;
+    }
+    const url = URL.createObjectURL(imageFile);
+    setFilePreview(url);
+    return () => URL.revokeObjectURL(url);
+  }, [imageFile]);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] ?? null;
+    setImageFile(file);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!text.trim() || !imageUrl.trim()) return;
+    if (!text.trim()) return;
+    if (imageMode === 'url' && !imageUrl.trim()) return;
+    if (imageMode === 'upload' && !imageFile && !editing) return;
     setLoading(true);
     try {
-      await onSubmit(text.trim(), imageUrl.trim());
+      await onSubmit(
+        text.trim(),
+        imageMode === 'url' ? imageUrl.trim() : '',
+        imageMode === 'upload' ? imageFile : null
+      );
       setText('');
       setImageUrl('');
+      setImageFile(null);
+      setImageMode('url');
     } finally {
       setLoading(false);
     }
@@ -70,25 +100,63 @@ export default function ChallengeForm({ visible, editing, onSubmit, onCancel }: 
             </div>
             <div className="space-y-2">
               <label className="text-xs font-bold uppercase tracking-widest text-[#141414]/40 ml-1">
-                Link da Imagem
+                Imagem
               </label>
-              <input
-                type="url"
-                value={imageUrl}
-                onChange={(e) => setImageUrl(e.target.value)}
-                placeholder="https://exemplo.com/imagem.png"
-                className="w-full px-4 py-3 bg-[#F5F5F0] rounded-xl focus:bg-white focus:ring-2 focus:ring-[#5A5A40]/30 transition-all focus:outline-none"
-                required
-              />
+
+              {/* Tabs */}
+              <div className="flex gap-2 mb-1">
+                <button
+                  type="button"
+                  onClick={() => setImageMode('url')}
+                  className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold transition-all ${
+                    imageMode === 'url'
+                      ? 'bg-[#5A5A40] text-white'
+                      : 'bg-[#F5F5F0] text-[#141414]/50 hover:text-[#141414]'
+                  }`}
+                >
+                  <LinkIcon className="w-3.5 h-3.5" />
+                  URL
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setImageMode('upload')}
+                  className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold transition-all ${
+                    imageMode === 'upload'
+                      ? 'bg-[#5A5A40] text-white'
+                      : 'bg-[#F5F5F0] text-[#141414]/50 hover:text-[#141414]'
+                  }`}
+                >
+                  <Upload className="w-3.5 h-3.5" />
+                  Upload
+                </button>
+              </div>
+
+              {imageMode === 'url' ? (
+                <input
+                  type="url"
+                  value={imageUrl}
+                  onChange={(e) => setImageUrl(e.target.value)}
+                  placeholder="https://exemplo.com/imagem.png"
+                  className="w-full px-4 py-3 bg-[#F5F5F0] rounded-xl focus:bg-white focus:ring-2 focus:ring-[#5A5A40]/30 transition-all focus:outline-none"
+                  required={imageMode === 'url'}
+                />
+              ) : (
+                <input
+                  type="file"
+                  accept="image/png,image/jpeg"
+                  onChange={handleFileChange}
+                  className="w-full px-4 py-2.5 bg-[#F5F5F0] rounded-xl focus:bg-white focus:ring-2 focus:ring-[#5A5A40]/30 transition-all focus:outline-none text-sm file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-[#5A5A40] file:text-white"
+                />
+              )}
             </div>
           </div>
 
           {/* Preview */}
-          {imageUrl && (
+          {((imageMode === 'url' && imageUrl) || (imageMode === 'upload' && filePreview)) && (
             <div className="bg-[#F5F5F0] p-4 rounded-2xl flex items-center gap-4">
               <div className="w-20 h-20 bg-white rounded-lg overflow-hidden border border-[#141414]/10">
                 <img
-                  src={imageUrl}
+                  src={imageMode === 'url' ? imageUrl : filePreview}
                   alt="Preview"
                   className="w-full h-full object-cover"
                   onError={(e) =>
@@ -96,7 +164,9 @@ export default function ChallengeForm({ visible, editing, onSubmit, onCancel }: 
                   }
                 />
               </div>
-              <p className="text-sm font-medium text-[#141414]/60 italic">Pré-visualização.</p>
+              <p className="text-sm font-medium text-[#141414]/60 italic">
+                {imageMode === 'url' ? 'Pré-visualização.' : `Arquivo selecionado: ${imageFile?.name}`}
+              </p>
             </div>
           )}
 

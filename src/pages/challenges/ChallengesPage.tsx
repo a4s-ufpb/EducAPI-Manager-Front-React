@@ -18,8 +18,8 @@ export default function ChallengesPage() {
   const [isAdding, setIsAdding] = useState(false);
   const [editingChallenge, setEditingChallenge] = useState<Challenge | null>(null);
 
-  const handleAdd = async (text: string, imageUrl: string) => {
-    await addChallenge(text, imageUrl);
+  const handleAdd = async (text: string, imageUrl: string, file?: File | null) => {
+    await addChallenge(text, imageUrl, file);
     setIsAdding(false);
   };
 
@@ -28,12 +28,12 @@ export default function ChallengesPage() {
     setIsAdding(true);
   };
 
-  const handleSave = async (text: string, imageUrl: string) => {
+  const handleSave = async (text: string, imageUrl: string, file?: File | null) => {
     if (editingChallenge) {
-      await updateChallenge(editingChallenge.id, text, imageUrl);
+      await updateChallenge(editingChallenge.id, text, imageUrl, file);
       setEditingChallenge(null);
     } else {
-      await handleAdd(text, imageUrl);
+      await handleAdd(text, imageUrl, file);
     }
     setIsAdding(false);
   };

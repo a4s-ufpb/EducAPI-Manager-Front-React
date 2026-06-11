@@ -23,6 +23,19 @@ export function removeToken(): void {
   localStorage.removeItem('user');
 }
 
+// Lê o id do usuário logado a partir do localStorage (usado como fallback
+// para authorId em respostas de create/update que não trazem 'creator').
+function getCurrentUserId(): string {
+  try {
+    const raw = localStorage.getItem('user');
+    if (!raw) return '';
+    const u = JSON.parse(raw) as { id?: string | number };
+    return u.id != null ? String(u.id) : '';
+  } catch {
+    return '';
+  }
+}
+
 // ---- Erro customizado ----
 export class ApiError extends Error {
   constructor(
@@ -39,10 +52,14 @@ export class ApiError extends Error {
 async function request<T>(path: string, options: RequestInit = {}, tokenOverride?: string): Promise<T> {
   const token = tokenOverride ?? getToken();
 
+  // Quando o body é FormData, não definimos Content-Type:
+  // o browser define automaticamente (multipart/form-data; boundary=...)
+  const isFormData = options.body instanceof FormData;
+
   const res = await fetch(`${API}${path}`, {
     ...options,
     headers: {
-      'Content-Type': 'application/json',
+      ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...options.headers,
     },
@@ -124,11 +141,11 @@ interface ApiContext {
   creator?: { id: number; name: string; email: string };
 }
 
-function contextToTheme(c: ApiContext): Theme {
+function contextToTheme(c: ApiContext, fallbackAuthorId = ''): Theme {
   return {
     id: String(c.id),
     text: c.name,
-    authorId: c.creator ? String(c.creator.id) : '',
+    authorId: c.creator ? String(c.creator.id) : fallbackAuthorId,
     createdAt: '',
     imageUrl: c.imageUrl,
     soundUrl: c.soundUrl,
@@ -146,19 +163,43 @@ export const themesApi = {
     request<{ content: ApiContext[] }>('/contexts?size=100', { headers: { Authorization: '' } })
       .then((page) => page.content.map(contextToTheme)),
 
-  /** POST /v1/api/auth/contexts */
-  create: (name: string, imageUrl = '', soundUrl = '', videoUrl = ''): Promise<Theme> =>
-    request<ApiContext>('/auth/contexts', {
+  /** POST /v1/api/auth/contexts (JSON ou multipart, se houver arquivo) */
+  create: (name: string, imageUrl = '', soundUrl = '', videoUrl = '', file?: File | null): Promise<Theme> => {
+    if (file) {
+      const form = new FormData();
+      form.append('name', name);
+      form.append('soundUrl', soundUrl);
+      form.append('videoUrl', videoUrl);
+      form.append('file', file);
+      return request<ApiContext>('/auth/contexts', {
+        method: 'POST',
+        body: form,
+      }).then((c) => contextToTheme(c, getCurrentUserId()));
+    }
+    return request<ApiContext>('/auth/contexts', {
       method: 'POST',
       body: JSON.stringify({ name, imageUrl, soundUrl, videoUrl }),
-    }).then(contextToTheme),
+    }).then((c) => contextToTheme(c, getCurrentUserId()));
+  },
 
-  /** PUT /v1/api/auth/contexts/{id} */
-  update: (id: string, name: string, imageUrl = '', soundUrl = '', videoUrl = ''): Promise<Theme> =>
-    request<ApiContext>(`/auth/contexts/${id}`, {
+  /** PUT /v1/api/auth/contexts/{id} (JSON ou multipart, se houver arquivo) */
+  update: (id: string, name: string, imageUrl = '', soundUrl = '', videoUrl = '', file?: File | null): Promise<Theme> => {
+    if (file) {
+      const form = new FormData();
+      form.append('name', name);
+      form.append('soundUrl', soundUrl);
+      form.append('videoUrl', videoUrl);
+      form.append('file', file);
+      return request<ApiContext>(`/auth/contexts/${id}`, {
+        method: 'PUT',
+        body: form,
+      }).then((c) => contextToTheme(c, getCurrentUserId()));
+    }
+    return request<ApiContext>(`/auth/contexts/${id}`, {
       method: 'PUT',
       body: JSON.stringify({ name, imageUrl, soundUrl, videoUrl }),
-    }).then(contextToTheme),
+    }).then((c) => contextToTheme(c, getCurrentUserId()));
+  },
 
   /** DELETE /v1/api/auth/contexts/{id} */
   remove: (id: string): Promise<void> =>
@@ -184,14 +225,14 @@ interface ApiContextWithChallenges {
   challenges: ApiChallenge[];
 }
 
-function apiChallengeToChallenge(c: ApiChallenge, themeId: string): Challenge {
+function apiChallengeToChallenge(c: ApiChallenge, themeId: string, fallbackAuthorId = ''): Challenge {
   return {
     id: String(c.id),
     text: c.word,
     imageUrl: c.imageUrl ?? '',
     soundUrl: c.soundUrl,
     videoUrl: c.videoUrl,
-    authorId: c.creator ? String(c.creator.id) : '',
+    authorId: c.creator ? String(c.creator.id) : fallbackAuthorId,
     themeId,
     createdAt: '',
   };
@@ -208,19 +249,43 @@ export const challengesApi = {
       (ctx) => (ctx.challenges ?? []).map((c) => apiChallengeToChallenge(c, themeId))
     ),
 
-  /** POST /v1/api/auth/challenges/{idContext} */
-  create: (themeId: string, word: string, imageUrl = '', soundUrl = '', videoUrl = ''): Promise<Challenge> =>
-    request<ApiChallenge>(`/auth/challenges/${themeId}`, {
+  /** POST /v1/api/auth/challenges/{idContext} (JSON ou multipart, se houver arquivo) */
+  create: (themeId: string, word: string, imageUrl = '', soundUrl = '', videoUrl = '', file?: File | null): Promise<Challenge> => {
+    if (file) {
+      const form = new FormData();
+      form.append('word', word);
+      form.append('soundUrl', soundUrl);
+      form.append('videoUrl', videoUrl);
+      form.append('file', file);
+      return request<ApiChallenge>(`/auth/challenges/${themeId}`, {
+        method: 'POST',
+        body: form,
+      }).then((c) => apiChallengeToChallenge(c, themeId, getCurrentUserId()));
+    }
+    return request<ApiChallenge>(`/auth/challenges/${themeId}`, {
       method: 'POST',
       body: JSON.stringify({ word, imageUrl, soundUrl, videoUrl }),
-    }).then((c) => apiChallengeToChallenge(c, themeId)),
+    }).then((c) => apiChallengeToChallenge(c, themeId, getCurrentUserId()));
+  },
 
-  /** PUT /v1/api/auth/challenges/{idChallenge} */
-  update: (themeId: string, id: string, word: string, imageUrl = '', soundUrl = '', videoUrl = ''): Promise<Challenge> =>
-    request<ApiChallenge>(`/auth/challenges/${id}`, {
+  /** PUT /v1/api/auth/challenges/{idChallenge} (JSON ou multipart, se houver arquivo) */
+  update: (themeId: string, id: string, word: string, imageUrl = '', soundUrl = '', videoUrl = '', file?: File | null): Promise<Challenge> => {
+    if (file) {
+      const form = new FormData();
+      form.append('word', word);
+      form.append('soundUrl', soundUrl);
+      form.append('videoUrl', videoUrl);
+      form.append('file', file);
+      return request<ApiChallenge>(`/auth/challenges/${id}`, {
+        method: 'PUT',
+        body: form,
+      }).then((c) => apiChallengeToChallenge(c, themeId, getCurrentUserId()));
+    }
+    return request<ApiChallenge>(`/auth/challenges/${id}`, {
       method: 'PUT',
       body: JSON.stringify({ word, imageUrl, soundUrl, videoUrl }),
-    }).then((c) => apiChallengeToChallenge(c, themeId)),
+    }).then((c) => apiChallengeToChallenge(c, themeId, getCurrentUserId()));
+  },
 
   /** DELETE /v1/api/auth/challenges/{idChallenge} */
   remove: (_themeId: string, id: string): Promise<void> =>

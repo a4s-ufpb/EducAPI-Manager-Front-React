@@ -22,15 +22,15 @@ export function useChallenges(themeId: string | undefined) {
       .finally(() => setLoading(false));
   }, [themeId]);
 
-  const addChallenge = async (text: string, imageUrl: string): Promise<Challenge> => {
+  const addChallenge = async (text: string, imageUrl: string, file?: File | null): Promise<Challenge> => {
     if (!themeId) throw new Error('themeId é obrigatório');
-    const created = await challengesApi.create(themeId, text, imageUrl);
+    const created = await challengesApi.create(themeId, text, imageUrl, '', '', file);
     setChallenges((prev) => [created, ...prev]);
     return created;
   };
 
   // Preserva soundUrl/videoUrl existentes ao editar só word e imageUrl
-  const updateChallenge = async (id: string, text: string, imageUrl: string): Promise<void> => {
+  const updateChallenge = async (id: string, text: string, imageUrl: string, file?: File | null): Promise<void> => {
     if (!themeId) throw new Error('themeId é obrigatório');
     const current = challenges.find((c) => c.id === id);
     const updated = await challengesApi.update(
@@ -39,7 +39,8 @@ export function useChallenges(themeId: string | undefined) {
       text,
       imageUrl,
       current?.soundUrl ?? '',
-      current?.videoUrl ?? ''
+      current?.videoUrl ?? '',
+      file
     );
     setChallenges((prev) => prev.map((c) => (c.id === id ? updated : c)));
   };

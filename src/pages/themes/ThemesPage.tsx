@@ -15,13 +15,14 @@ export default function ThemesPage() {
   const [isAdding, setIsAdding] = useState(false);
   const [editingTheme, setEditingTheme] = useState<Theme | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [ownerFilter, setOwnerFilter] = useState<'all' | 'mine'>('all');
 
-  const filtered = themes.filter((t) =>
-    t.text.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filtered = themes
+    .filter((t) => t.text.toLowerCase().includes(searchTerm.toLowerCase()))
+    .filter((t) => (ownerFilter === 'mine' ? t.authorId === user?.id : true));
 
-  const handleAdd = async (text: string, imageUrl: string, soundUrl: string, videoUrl: string) => {
-    await addTheme(text, imageUrl, soundUrl, videoUrl);
+  const handleAdd = async (text: string, imageUrl: string, soundUrl: string, videoUrl: string, file?: File | null) => {
+    await addTheme(text, imageUrl, soundUrl, videoUrl, file);
     setIsAdding(false);
   };
 
@@ -30,18 +31,18 @@ export default function ThemesPage() {
     setIsAdding(true);
   };
 
-  const handleSaveEdit = async (text: string, imageUrl: string, soundUrl: string, videoUrl: string) => {
+  const handleSaveEdit = async (text: string, imageUrl: string, soundUrl: string, videoUrl: string, file?: File | null) => {
     if (!editingTheme) return;
-    await updateTheme(editingTheme.id, text, imageUrl, soundUrl, videoUrl);
+    await updateTheme(editingTheme.id, text, imageUrl, soundUrl, videoUrl, file);
     setEditingTheme(null);
     setIsAdding(false);
   };
 
-  const handleSubmit = async (text: string, imageUrl: string, soundUrl: string, videoUrl: string) => {
+  const handleSubmit = async (text: string, imageUrl: string, soundUrl: string, videoUrl: string, file?: File | null) => {
     if (editingTheme) {
-      await handleSaveEdit(text, imageUrl, soundUrl, videoUrl);
+      await handleSaveEdit(text, imageUrl, soundUrl, videoUrl, file);
     } else {
-      await handleAdd(text, imageUrl, soundUrl, videoUrl);
+      await handleAdd(text, imageUrl, soundUrl, videoUrl, file);
     }
   };
 
@@ -95,6 +96,32 @@ export default function ThemesPage() {
           className="w-full pl-12 pr-4 py-3 bg-white border border-[#141414]/10 rounded-2xl shadow-sm focus:outline-none focus:ring-2 focus:ring-[#5A5A40]/30 transition-all"
         />
       </div>
+
+      {/* Filtro de propriedade */}
+      {user && (
+        <div className="flex gap-2">
+          <button
+            onClick={() => setOwnerFilter('all')}
+            className={`px-4 py-2 rounded-full text-sm font-semibold transition-all ${
+              ownerFilter === 'all'
+                ? 'bg-[#5A5A40] text-white shadow-md'
+                : 'bg-white text-[#141414]/60 border border-[#141414]/10 hover:text-[#141414]'
+            }`}
+          >
+            Todos os temas
+          </button>
+          <button
+            onClick={() => setOwnerFilter('mine')}
+            className={`px-4 py-2 rounded-full text-sm font-semibold transition-all ${
+              ownerFilter === 'mine'
+                ? 'bg-[#5A5A40] text-white shadow-md'
+                : 'bg-white text-[#141414]/60 border border-[#141414]/10 hover:text-[#141414]'
+            }`}
+          >
+            Meus temas
+          </button>
+        </div>
+      )}
 
       {/* Form de adição/edição */}
       <ThemeForm
