@@ -73,6 +73,64 @@ npm run dev
 
 ---
 
+## 🐳 Docker
+
+O projeto tem suporte a Docker para dois cenários: **desenvolvimento** (com hot-reload) e **produção** (build estático servido por Nginx). Os dois usam o mesmo `Dockerfile`, através de *multi-stage build*.
+
+### Como funciona
+
+```
+Dockerfile
+├── deps          → instala as dependências (npm ci), reaproveitado pelos outros stages
+├── development   → roda `npm run dev` (Vite dev server)
+├── build         → roda `npm run build` (gera a pasta dist/)
+└── production    → Nginx servindo os arquivos de dist/ (imagem final leve, sem Node)
+```
+
+- Em **produção**, as variáveis `VITE_*` são embutidas no bundle JS durante o build (é assim que o Vite funciona), então são passadas como *build args*, lidas automaticamente do seu `.env` pelo `docker-compose.yml`.
+- Em **desenvolvimento**, o código local é montado como volume no container, então o `.env` é lido normalmente em runtime, igual rodando `npm run dev` fora do Docker.
+- O `nginx.conf` tem uma regra de *SPA routing* (`try_files ... /index.html`) para o React Router funcionar corretamente em rotas acessadas direto pela URL (ex: `/themes/1/challenges`).
+
+### Pré-requisitos
+
+- [Docker](https://docs.docker.com/get-docker/) e [Docker Compose](https://docs.docker.com/compose/) instalados
+- Um `.env` na raiz do projeto (`cp .env.example .env` e preencha as variáveis)
+
+### Rodando em desenvolvimento
+
+```bash
+docker compose up frontend-dev
+```
+
+Acesse em **http://localhost:3000**. O hot-reload funciona normalmente ao editar os arquivos localmente (o Vite roda com *polling* de arquivos ativado, necessário para funcionar dentro do container).
+
+Se editar o `Dockerfile` ou o `docker-compose.yml`, é preciso recriar o container:
+
+```bash
+docker compose down
+docker compose up frontend-dev --build
+```
+
+### Rodando em produção
+
+```bash
+docker compose up frontend-prod --build
+```
+
+Acesse em **http://localhost:8080**. Essa imagem não tem hot-reload nem Node.js — é só o build estático (`dist/`) servido pelo Nginx, pronta pra deploy.
+
+### Comandos úteis
+
+| Comando                                       | O que faz                                        |
+|------------------------------------------------|---------------------------------------------------|
+| `docker compose up frontend-dev`                | Sobe o ambiente de desenvolvimento                |
+| `docker compose up frontend-prod --build`       | Builda e sobe o ambiente de produção              |
+| `docker compose down`                           | Para e remove os containers                       |
+| `docker compose logs -f frontend-dev`           | Acompanha os logs em tempo real                   |
+| `docker build --target production -t app .`     | Builda só a imagem de produção manualmente        |
+
+---
+
 ## 🔑 Variáveis de Ambiente
 
 | Variável              | Descrição                                         |
