@@ -62,8 +62,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
   };
 
+  /**
+   * PUT /auth/users/password. O backend rejeita com 403 (GoogleAccountException)
+   * se a conta não tiver senha local (login via Google) — o erro é repassado
+   * para quem chamar tratar (ver ProfilePage + friendlyError(err, 'password')).
+   */
+  const changePassword = async (currentPassword: string, newPassword: string) => {
+    const updated = await authApi.changePassword(currentPassword, newPassword);
+    setUser(updated);
+    localStorage.setItem('user', JSON.stringify(updated));
+  };
+
+  /** DELETE /auth/users. Funciona para contas locais e contas Google. */
+  const deleteAccount = async () => {
+    await authApi.deleteAccount();
+    removeToken();
+    setUser(null);
+  };
+
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, loginWithGoogle, logout }}>
+    <AuthContext.Provider
+      value={{ user, loading, login, register, loginWithGoogle, logout, changePassword, deleteAccount }}
+    >
       {children}
     </AuthContext.Provider>
   );

@@ -1,6 +1,6 @@
 import { ReactNode } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Home, LogIn, LogOut, BookOpen } from 'lucide-react';
+import { Home, LogIn, LogOut, User as UserIcon } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import logo from '../../assets/logo.png';
 interface AppLayoutProps {
@@ -36,17 +36,28 @@ export default function AppLayout({ children }: AppLayoutProps) {
             </Link>
 
             {user ? (
-              <div className="flex items-center gap-3 bg-[#5A5A40]/10 px-3 py-1.5 rounded-full border border-[#5A5A40]/20">
-                {user.avatar && (
-                  <img
-                    src={user.avatar}
-                    alt={user.name}
-                    className="w-6 h-6 rounded-full object-cover"
-                  />
-                )}
-                <span className="text-xs font-semibold text-[#5A5A40] hidden sm:block">
-                  {user.name}
-                </span>
+              <div className="flex items-center gap-3 bg-[#5A5A40]/10 pl-1.5 pr-3 py-1.5 rounded-full border border-[#5A5A40]/20">
+                <Link
+                  to="/perfil"
+                  className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+                  title="Minha conta"
+                >
+                  {user.avatar ? (
+                    <img
+                      src={user.avatar}
+                      alt={user.name}
+                      className="w-6 h-6 rounded-full object-cover"
+                    />
+                  ) : (
+                    <span className="w-6 h-6 rounded-full bg-[#5A5A40]/20 flex items-center justify-center">
+                      <UserIcon className="w-3.5 h-3.5 text-[#5A5A40]" />
+                    </span>
+                  )}
+                  <span className="text-xs font-semibold text-[#5A5A40] hidden sm:block">
+                    {user.name}
+                  </span>
+                </Link>
+                <span className="w-px h-4 bg-[#5A5A40]/20" />
                 <button
                   onClick={handleLogout}
                   className="text-xs font-bold uppercase tracking-wider text-[#5A5A40] hover:underline flex items-center gap-1"

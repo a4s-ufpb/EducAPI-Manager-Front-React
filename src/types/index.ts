@@ -7,6 +7,8 @@ export interface User {
   name: string;
   email: string;
   avatar?: string;
+  /** true quando a conta foi criada via login com Google (sem senha local) */
+  googleAccount?: boolean;
 }
 
 export interface AuthResponse {
@@ -44,4 +46,8 @@ export interface AuthContextType {
   register: (name: string, email: string, password: string) => Promise<void>;
   loginWithGoogle: (googleToken: string) => Promise<void>;
   logout: () => void;
+  /** PUT /auth/users/password — bloqueado no backend (403) para contas Google */
+  changePassword: (currentPassword: string, newPassword: string) => Promise<void>;
+  /** DELETE /auth/users — funciona para qualquer tipo de conta */
+  deleteAccount: () => Promise<void>;
 }

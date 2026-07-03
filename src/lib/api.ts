@@ -127,6 +127,24 @@ export const authApi = {
     const user = await authApi.me(token);
     return { token, user };
   },
+
+  /**
+   * PUT /v1/api/auth/users/password  →  UserDTO
+   * Troca a senha do usuário logado. O backend retorna 403 (GoogleAccountException)
+   * se a conta tiver sido criada via login com Google (não possui senha local).
+   */
+  changePassword: (currentPassword: string, newPassword: string): Promise<User> =>
+    request<User>('/auth/users/password', {
+      method: 'PUT',
+      body: JSON.stringify({ currentPassword, newPassword }),
+    }).then((u) => ({ ...u, id: String(u.id) })),
+
+  /**
+   * DELETE /v1/api/auth/users  →  UserDTO
+   * Exclui a conta do usuário logado. Funciona tanto para contas locais
+   * quanto para contas Google.
+   */
+  deleteAccount: (): Promise<void> => request<void>('/auth/users', { method: 'DELETE' }),
 };
 
 // ----------------------------------------------------------------

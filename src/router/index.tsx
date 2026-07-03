@@ -9,6 +9,7 @@ import LoginPage from '../pages/auth/LoginPage';
 import RegisterPage from '../pages/auth/RegisterPage';
 import ThemesPage from '../pages/themes/ThemesPage';
 import ChallengesPage from '../pages/challenges/ChallengesPage';
+import ProfilePage from '../pages/profile/ProfilePage';
 import NotFoundPage from '../pages/NotFoundPage';
 
 // Components
@@ -72,6 +73,16 @@ export default function AppRouter() {
           <PrivateRoute>
             <AppLayout>
               <ChallengesPage />
+            </AppLayout>
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/perfil"
+        element={
+          <PrivateRoute>
+            <AppLayout>
+              <ProfilePage />
             </AppLayout>
           </PrivateRoute>
         }
