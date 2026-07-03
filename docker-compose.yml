@@ -1,10 +1,46 @@
 services:
-  app:
-    build: .
-    image: andrehsvictor/educapi-manager-react
+  # -------------------------------------------------------------------------
+  # Desenvolvimento: Vite dev server com hot-reload.
+  # Uso: docker compose up frontend-dev
+  # Acesse em: http://localhost:3000
+  # -------------------------------------------------------------------------
+  frontend-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
     ports:
-      - 5173:5173
+      - "3000:3000"
     env_file:
       - .env
-    container_name: educapi-manager-react
-    restart: always
+    environment:
+      # Reforça o polling de arquivos (necessário em bind mounts no Docker)
+      - CHOKIDAR_USEPOLLING=true
+    volumes:
+      # Sincroniza o código local com o container (hot-reload ao salvar)
+      - .:/app
+      # Evita que o node_modules local (se existir) sobrescreva o do container
+      - /app/node_modules
+    stdin_open: true
+    tty: true
+
+  # -------------------------------------------------------------------------
+  # Produção: build estático servido pelo Nginx.
+  # Uso: docker compose up frontend-prod
+  # Acesse em: http://localhost:8080
+  #
+  # As variáveis VITE_API_URL e VITE_GOOGLE_CLIENT_ID vêm do arquivo .env
+  # (na raiz do projeto) e são lidas automaticamente pelo Docker Compose
+  # para preencher os build args abaixo.
+  # -------------------------------------------------------------------------
+  frontend-prod:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+      args:
+        VITE_API_URL: ${VITE_API_URL}
+        VITE_GOOGLE_CLIENT_ID: ${VITE_GOOGLE_CLIENT_ID}
+    ports:
+      - "8080:80"
+    restart: unless-stopped
