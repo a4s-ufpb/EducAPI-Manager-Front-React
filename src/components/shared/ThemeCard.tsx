@@ -12,6 +12,10 @@ interface ThemeCardProps {
 
 export default function ThemeCard({ theme, user, onEdit, onDelete }: ThemeCardProps) {
   const isOwner = !!user && user.id === theme.authorId;
+  // Regra do backend (ContextService.delete/update): dono sempre pode editar/excluir;
+  // ADMIN/SYSADMIN também podem editar/excluir mesmo sem serem donos (bypass administrativo).
+  const isAdminAcc = !!user && (user.role === 'ADMIN' || user.role === 'SYSADMIN');
+  const canDelete = isOwner || isAdminAcc;
 
   return (
     <motion.div
@@ -41,22 +45,26 @@ export default function ThemeCard({ theme, user, onEdit, onDelete }: ThemeCardPr
         </div>
 
         {/* Botões editar/excluir */}
-        {isOwner && (
+        {(isOwner || canDelete) && (
           <div className="absolute top-3 right-3 flex gap-2 z-10">
-            <button
-              onClick={() => onEdit(theme)}
-              className="p-2 bg-white/90 backdrop-blur-sm text-[#141414] rounded-xl hover:bg-white shadow-lg"
-              title="Editar"
-            >
-              <Edit2 className="w-4 h-4" />
-            </button>
-            <button
-              onClick={() => onDelete(theme.id)}
-              className="p-2 bg-red-500 text-white rounded-xl hover:bg-red-600 shadow-lg"
-              title="Excluir"
-            >
-              <Trash2 className="w-4 h-4" />
-            </button>
+            {(isOwner || isAdminAcc) && (
+              <button
+                onClick={() => onEdit(theme)}
+                className="p-2 bg-white/90 backdrop-blur-sm text-[#141414] rounded-xl hover:bg-white shadow-lg"
+                title={isOwner ? 'Editar' : 'Editar (moderação administrativa)'}
+              >
+                <Edit2 className="w-4 h-4" />
+              </button>
+            )}
+            {canDelete && (
+              <button
+                onClick={() => onDelete(theme.id)}
+                className="p-2 bg-red-500 text-white rounded-xl hover:bg-red-600 shadow-lg"
+                title={isOwner ? 'Excluir' : 'Excluir (moderação administrativa)'}
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
+            )}
           </div>
         )}
       </div>

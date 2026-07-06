@@ -4,7 +4,7 @@
 // Troque VITE_API_URL no .env pela URL do seu deploy
 // ============================================================
 
-import type { User, Theme, Challenge } from '../types';
+import type { User, Theme, Challenge, AdminUser, LogAuditoria, Page, AcaoAuditoria, Role, LimpezaLogsResult } from '../types';
 
 const BASE_URL = (import.meta.env.VITE_API_URL ?? 'http://localhost:8080').replace(/\/$/, '');
 const API = `${BASE_URL}/v1/api`;
@@ -48,6 +48,14 @@ export class ApiError extends Error {
   }
 }
 
+// Formato real de erro devolvido pelo ResourceExceptionHandler do backend:
+// StandardError { status, msg, timeStamp, path } e ValidationError (extends
+// StandardError) adiciona 'erros: [{ fieldName, message }]'.
+interface BackendErrorBody {
+  msg?: string;
+  erros?: { fieldName: string; message: string }[];
+}
+
 // ---- Request base ----
 async function request<T>(path: string, options: RequestInit = {}, tokenOverride?: string): Promise<T> {
   const token = tokenOverride ?? getToken();
@@ -66,12 +74,8 @@ async function request<T>(path: string, options: RequestInit = {}, tokenOverride
   });
 
   if (!res.ok) {
-    const body = await res.json().catch(() => ({}));
-    throw new ApiError(
-      (body as { message?: string }).message ?? `Erro ${res.status}`,
-      res.status,
-      body
-    );
+    const body = (await res.json().catch(() => ({}))) as BackendErrorBody;
+    throw new ApiError(body.msg ?? `Erro ${res.status}`, res.status, body);
   }
 
   const text = await res.text();
@@ -109,10 +113,15 @@ export const authApi = {
 
   /**
    * GET /v1/api/auth/users  →  User
-   * Garante que o id venha como string para comparação consistente com authorId.
+   * Garante que o id venha como string para comparação consistente com authorId,
+   * e que role tenha um valor default (CLIENTE) caso o backend não o envie.
    */
   me: (tokenOverride?: string): Promise<User> =>
-    request<User>('/auth/users', {}, tokenOverride).then((u) => ({ ...u, id: String(u.id) })),
+    request<User>('/auth/users', {}, tokenOverride).then((u) => ({
+      ...u,
+      id: String(u.id),
+      role: u.role ?? 'CLIENTE',
+    })),
 
   /**
    * POST /v1/api/auth/login/google  →  { token }
@@ -137,7 +146,7 @@ export const authApi = {
     request<User>('/auth/users/password', {
       method: 'PUT',
       body: JSON.stringify({ currentPassword, newPassword }),
-    }).then((u) => ({ ...u, id: String(u.id) })),
+    }).then((u) => ({ ...u, id: String(u.id), role: u.role ?? 'CLIENTE' })),
 
   /**
    * DELETE /v1/api/auth/users  →  UserDTO
@@ -179,7 +188,7 @@ export const themesApi = {
    */
   list: (): Promise<Theme[]> =>
     request<{ content: ApiContext[] }>('/contexts?size=100', { headers: { Authorization: '' } })
-      .then((page) => page.content.map(contextToTheme)),
+      .then((page) => page.content.map((c) => contextToTheme(c))),
 
   /** POST /v1/api/auth/contexts (JSON ou multipart, se houver arquivo) */
   create: (name: string, imageUrl = '', soundUrl = '', videoUrl = '', file?: File | null): Promise<Theme> => {
@@ -308,4 +317,111 @@ export const challengesApi = {
   /** DELETE /v1/api/auth/challenges/{idChallenge} */
   remove: (_themeId: string, id: string): Promise<void> =>
     request<void>(`/auth/challenges/${id}`, { method: 'DELETE' }),
+};
+
+// ----------------------------------------------------------------
+// ADMINISTRAÇÃO  →  endpoints /admin/** (restritos a ADMIN/SYSADMIN)
+// ----------------------------------------------------------------
+
+interface ApiUser {
+  id: number;
+  name: string;
+  email: string;
+  role: Role;
+}
+
+interface ApiLogAuditoria {
+  id: number;
+  atorEmail: string;
+  atorNome: string;
+  acao: AcaoAuditoria;
+  tipoEntidade: string;
+  entidadeId: number | null;
+  detalhes: string | null;
+  timestamp: string;
+}
+
+interface ApiLimpezaLogsResult {
+  removidos: number;
+  diasRetencao: number;
+  cortadoEm: string;
+}
+
+function apiUserToAdminUser(u: ApiUser): AdminUser {
+  return { id: String(u.id), name: u.name, email: u.email, role: u.role };
+}
+
+function apiLogToLogAuditoria(l: ApiLogAuditoria): LogAuditoria {
+  return {
+    id: String(l.id),
+    atorEmail: l.atorEmail,
+    atorNome: l.atorNome,
+    acao: l.acao,
+    tipoEntidade: l.tipoEntidade,
+    entidadeId: l.entidadeId != null ? String(l.entidadeId) : null,
+    detalhes: l.detalhes,
+    timestamp: l.timestamp,
+  };
+}
+
+export const adminApi = {
+  /**
+   * GET /v1/api/admin/users?page=&size=
+   * Restrito a ADMIN/SYSADMIN. Lista todos os usuários do sistema, com role.
+   */
+  listUsers: (page = 0, size = 50): Promise<Page<AdminUser>> =>
+    request<Page<ApiUser>>(`/admin/users?page=${page}&size=${size}`).then((p) => ({
+      ...p,
+      content: p.content.map(apiUserToAdminUser),
+    })),
+
+  /**
+   * PUT /v1/api/admin/users/{id}/promote
+   * Restrito a SYSADMIN. Promove um usuário CLIENTE para ADMIN.
+   */
+  promote: (id: string): Promise<AdminUser> =>
+    request<ApiUser>(`/admin/users/${id}/promote`, { method: 'PUT' }).then(apiUserToAdminUser),
+
+  /**
+   * PUT /v1/api/admin/users/{id}/demote
+   * Restrito a SYSADMIN. Rebaixa um usuário ADMIN de volta para CLIENTE.
+   */
+  demote: (id: string): Promise<AdminUser> =>
+    request<ApiUser>(`/admin/users/${id}/demote`, { method: 'PUT' }).then(apiUserToAdminUser),
+
+  /**
+   * DELETE /v1/api/admin/users/{id}
+   * Restrito a ADMIN/SYSADMIN. SYSADMIN exclui qualquer usuário (exceto a si
+   * mesmo); ADMIN só exclui usuários CLIENTE. Conteúdo do usuário excluído
+   * fica órfão (creator = null), não é removido em cascata.
+   */
+  deleteUser: (id: string): Promise<AdminUser> =>
+    request<ApiUser>(`/admin/users/${id}`, { method: 'DELETE' }).then(apiUserToAdminUser),
+
+  /**
+   * GET /v1/api/admin/logs?atorEmail=&acao=&page=&size=
+   * Restrito a ADMIN/SYSADMIN. Log de auditoria paginado e filtrável.
+   */
+  listLogs: (
+    params: { atorEmail?: string; acao?: AcaoAuditoria; page?: number; size?: number } = {}
+  ): Promise<Page<LogAuditoria>> => {
+    const query = new URLSearchParams();
+    if (params.atorEmail) query.set('atorEmail', params.atorEmail);
+    if (params.acao) query.set('acao', params.acao);
+    query.set('page', String(params.page ?? 0));
+    query.set('size', String(params.size ?? 20));
+    return request<Page<ApiLogAuditoria>>(`/admin/logs?${query.toString()}`).then((p) => ({
+      ...p,
+      content: p.content.map(apiLogToLogAuditoria),
+    }));
+  },
+
+  /**
+   * DELETE /v1/api/admin/logs?diasRetencao=
+   * Restrito a SYSADMIN. Remove definitivamente as entradas do log de
+   * auditoria mais antigas que `diasRetencao` dias. Retenção mínima
+   * aceita pelo backend: 30 dias.
+   */
+  limparLogs: (diasRetencao: number): Promise<LimpezaLogsResult> =>
+    request<ApiLimpezaLogsResult>(`/admin/logs?diasRetencao=${diasRetencao}`, { method: 'DELETE' }),
 };
