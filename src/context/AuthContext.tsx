@@ -80,9 +80,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
   };
 
+  const isAdmin = user?.role === 'ADMIN' || user?.role === 'SYSADMIN';
+  const isSysAdmin = user?.role === 'SYSADMIN';
+
   return (
     <AuthContext.Provider
-      value={{ user, loading, login, register, loginWithGoogle, logout, changePassword, deleteAccount }}
+      value={{
+        user,
+        loading,
+        login,
+        register,
+        loginWithGoogle,
+        logout,
+        changePassword,
+        deleteAccount,
+        isAdmin,
+        isSysAdmin,
+      }}
     >
       {children}
     </AuthContext.Provider>

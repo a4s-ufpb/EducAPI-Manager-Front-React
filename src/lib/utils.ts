@@ -9,9 +9,12 @@ interface FieldMessage {
   message: string;
 }
 
-interface ValidationErrorBody {
-  errors?: FieldMessage[];
-  message?: string;
+// Corpo real de erro devolvido pelo ResourceExceptionHandler do backend:
+// StandardError { status, msg, timeStamp, path }; ValidationError (subclasse)
+// adiciona 'erros: FieldMessage[]'.
+interface BackendErrorBody {
+  erros?: FieldMessage[];
+  msg?: string;
 }
 
 /**
@@ -19,23 +22,30 @@ interface ValidationErrorBody {
  * Trata erros de validação de campo (400) com a lista real de problemas.
  *
  * @param context 'auth' para login/cadastro, 'password' para troca de senha
- *   (muda o significado de 401/403, que têm causas diferentes em cada fluxo).
+ *   (muda o significado de 401/403, que têm causas diferentes em cada fluxo),
+ *   'admin' para as ações administrativas (promover/excluir usuário).
  */
-export function friendlyError(err: unknown, context: 'auth' | 'password' = 'auth'): string {
+export function friendlyError(err: unknown, context: 'auth' | 'password' | 'admin' = 'auth'): string {
   if (err instanceof ApiError) {
     if (context === 'password') {
       if (err.status === 401) return 'Senha atual incorreta.';
       if (err.status === 403)
         return 'Esta conta foi criada com login do Google e não possui senha local. Não é possível alterá-la.';
+    } else if (context === 'admin') {
+      // O backend já manda a mensagem certa (msg) para esses casos —
+      // ex: "ADMIN só pode excluir usuários com role CLIENTE.",
+      // "Não é possível excluir a própria conta por este endpoint.",
+      // "Usuário já possui privilégios administrativos." — então só
+      // repassamos abaixo via err.message, sem sobrescrever.
     } else {
       if (err.status === 401) return 'E-mail ou senha incorretos.';
       if (err.status === 409) return 'Este e-mail já está cadastrado.';
     }
 
-    // Erros de validação de campo: a API devolve { errors: [{ fieldName, message }] }
+    // Erros de validação de campo: a API devolve { erros: [{ fieldName, message }] }
     if (err.status === 400) {
-      const body = err.data as ValidationErrorBody | undefined;
-      if (body?.errors && body.errors.length > 0) {
+      const body = err.data as BackendErrorBody | undefined;
+      if (body?.erros && body.erros.length > 0) {
         const fieldLabels: Record<string, string> = {
           name: 'Nome',
           email: 'E-mail',
@@ -44,14 +54,14 @@ export function friendlyError(err: unknown, context: 'auth' | 'password' = 'auth
           newPassword: 'Nova senha',
           word: 'Palavra',
         };
-        return body.errors
+        return body.erros
           .map((e) => {
             const label = fieldLabels[e.fieldName] ?? e.fieldName;
             return `${label}: ${e.message}`;
           })
           .join(' • ');
       }
-      return body?.message ?? 'Dados inválidos. Verifique os campos.';
+      return body?.msg ?? 'Dados inválidos. Verifique os campos.';
     }
 
     return err.message ?? 'Ocorreu um erro. Tente novamente.';

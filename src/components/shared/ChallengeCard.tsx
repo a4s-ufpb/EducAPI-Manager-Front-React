@@ -11,6 +11,10 @@ interface ChallengeCardProps {
 
 export default function ChallengeCard({ challenge, user, onEdit, onDelete }: ChallengeCardProps) {
   const isOwner = !!user && user.id === challenge.authorId;
+  // Mesma regra do ChallengeService.delete/update: dono ou ADMIN/SYSADMIN podem
+  // editar/excluir.
+  const isAdminAcc = !!user && (user.role === 'ADMIN' || user.role === 'SYSADMIN');
+  const canDelete = isOwner || isAdminAcc;
 
   return (
     <motion.div
@@ -30,20 +34,26 @@ export default function ChallengeCard({ challenge, user, onEdit, onDelete }: Cha
             e.currentTarget.src = 'https://placehold.co/400x400?text=Imagem+Indisponível';
           }}
         />
-        {isOwner && (
+        {(isOwner || canDelete) && (
           <div className="absolute top-3 right-3 flex gap-2">
-            <button
-              onClick={() => onEdit(challenge)}
-              className="p-2 bg-white/90 backdrop-blur-sm text-[#141414] rounded-xl hover:bg-white shadow-lg"
-            >
-              <Edit2 className="w-4 h-4" />
-            </button>
-            <button
-              onClick={() => onDelete(challenge.id)}
-              className="p-2 bg-red-500 text-white rounded-xl hover:bg-red-600 shadow-lg"
-            >
-              <Trash2 className="w-4 h-4" />
-            </button>
+            {(isOwner || isAdminAcc) && (
+              <button
+                onClick={() => onEdit(challenge)}
+                className="p-2 bg-white/90 backdrop-blur-sm text-[#141414] rounded-xl hover:bg-white shadow-lg"
+                title={isOwner ? 'Editar' : 'Editar (moderação administrativa)'}
+              >
+                <Edit2 className="w-4 h-4" />
+              </button>
+            )}
+            {canDelete && (
+              <button
+                onClick={() => onDelete(challenge.id)}
+                className="p-2 bg-red-500 text-white rounded-xl hover:bg-red-600 shadow-lg"
+                title={isOwner ? 'Excluir' : 'Excluir (moderação administrativa)'}
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
+            )}
           </div>
         )}
       </div>

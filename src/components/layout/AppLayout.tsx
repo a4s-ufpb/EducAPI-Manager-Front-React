@@ -1,6 +1,6 @@
 import { ReactNode } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Home, LogIn, LogOut, User as UserIcon } from 'lucide-react';
+import { Home, LogIn, LogOut, User as UserIcon, ShieldCheck } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import logo from '../../assets/logo.png';
 interface AppLayoutProps {
@@ -8,7 +8,7 @@ interface AppLayoutProps {
 }
 
 export default function AppLayout({ children }: AppLayoutProps) {
-  const { user, logout } = useAuth();
+  const { user, logout, isSysAdmin } = useAuth();
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -34,6 +34,17 @@ export default function AppLayout({ children }: AppLayoutProps) {
               <Home className="w-4 h-4" />
               <span className="hidden sm:inline">Início</span>
             </Link>
+
+            {isSysAdmin && (
+              <Link
+                to="/admin"
+                className="text-sm font-medium hover:text-[#5A5A40] transition-colors flex items-center gap-1"
+                title="Painel de administração"
+              >
+                <ShieldCheck className="w-4 h-4" />
+                <span className="hidden sm:inline">Administração</span>
+              </Link>
+            )}
 
             {user ? (
               <div className="flex items-center gap-3 bg-[#5A5A40]/10 pl-1.5 pr-3 py-1.5 rounded-full border border-[#5A5A40]/20">

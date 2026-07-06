@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
-import { KeyRound, Trash2, AlertTriangle, CheckCircle2, Lock } from 'lucide-react';
+import { KeyRound, Trash2, AlertTriangle, CheckCircle2, Lock, ShieldCheck } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { friendlyError } from '../../lib/utils';
 import ErrorMessage from '../../components/ui/ErrorMessage';
@@ -122,6 +122,13 @@ export default function ProfilePage() {
           <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#141414]/50 bg-[#141414]/5 border border-[#141414]/10 rounded-full px-3 py-1.5 w-fit">
             <Lock className="w-3.5 h-3.5" />
             Login local (e-mail e senha)
+          </div>
+        )}
+
+        {user.role !== 'CLIENTE' && (
+          <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#5A5A40] bg-[#5A5A40]/10 border border-[#5A5A40]/20 rounded-full px-3 py-1.5 w-fit">
+            <ShieldCheck className="w-3.5 h-3.5" />
+            Papel: {user.role}
           </div>
         )}
       </motion.div>
